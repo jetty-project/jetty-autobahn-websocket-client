@@ -26,7 +26,8 @@ public class TestClient
         URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
         if (url == null)
         {
-            return "<unknown/dev>";
+            return "GitMaster";
+            // TODO: use git to get actual branch name?
         }
 
         InputStream in = null;
@@ -61,7 +62,7 @@ public class TestClient
         TestClient client = null;
         try
         {
-            String userAgent = "Jetty-Websocket-Client/" + getJettyVersion();
+            String userAgent = "JettyWebsocketClient/" + getJettyVersion();
             client = new TestClient(hostname,port,userAgent);
             client.startTestRun();
         }
@@ -172,7 +173,7 @@ public class TestClient
 
     private void updateReports() throws IOException, InterruptedException
     {
-        URI wsUri = baseWebsocketUri.resolve("/updateReports?case=" + currentCaseId + "&agent=" + UrlEncoded.encodeString(userAgent));
+        URI wsUri = baseWebsocketUri.resolve("/updateReports?agent=" + UrlEncoded.encodeString(userAgent));
         WebSocketClient wsc = clientFactory.newWebSocketClient();
         OnUpdateReports onUpdateReports = new OnUpdateReports();
         wsc.open(wsUri,onUpdateReports);
