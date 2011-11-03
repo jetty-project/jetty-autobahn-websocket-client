@@ -53,8 +53,11 @@ public class TestClient
             System.exit(-1);
         }
 
+        System.setProperty("org.eclipse.jetty.websocket.STRICT","true");
         System.setProperty("org.eclipse.jetty.util.log.stderr.LONG","true");
-        System.setProperty("org.eclipse.jetty.test.LEVEL","DEBUG");
+        System.setProperty("org.eclipse.jetty.io.nio.LEVEL","INFO");
+        System.setProperty("org.eclipse.jetty.util.component.LEVEL","INFO");
+        System.setProperty("org.eclipse.jetty.LEVEL","DEBUG");
 
         String hostname = args[0];
         int port = Integer.parseInt(args[1]);
