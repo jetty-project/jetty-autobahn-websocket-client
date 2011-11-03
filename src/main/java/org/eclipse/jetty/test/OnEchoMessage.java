@@ -8,18 +8,18 @@ import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jetty.websocket.WebSocket;
 
-public class OnEchoMessage implements WebSocket.OnTextMessage
+public class OnEchoMessage implements WebSocket.OnTextMessage, WebSocket.OnBinaryMessage
 {
     private static final Logger LOG = Log.getLogger(OnEchoMessage.class);
+    private static final int KBYTE = 1024;
+    private static final int MBYTE = KBYTE * KBYTE;
     private final int currentCaseId;
-    private final int totalCaseCount;
     private Connection connection;
     private CountDownLatch latch = new CountDownLatch(1);
 
-    public OnEchoMessage(int currentCaseId, int totalCaseCount)
+    public OnEchoMessage(int currentCaseId)
     {
         this.currentCaseId = currentCaseId;
-        this.totalCaseCount = totalCaseCount;
     }
 
     public void awaitClose() throws InterruptedException
@@ -35,6 +35,20 @@ public class OnEchoMessage implements WebSocket.OnTextMessage
     }
 
     @Override
+    public void onMessage(byte[] data, int offset, int length)
+    {
+        try
+        {
+            // Echo the data back.
+            connection.sendMessage(data,offset,length);
+        }
+        catch (IOException e)
+        {
+            LOG.warn("Unable to echo binary message back",e);
+        }
+    }
+
+    @Override
     public void onMessage(String data)
     {
         try
@@ -44,7 +58,7 @@ public class OnEchoMessage implements WebSocket.OnTextMessage
         }
         catch (IOException e)
         {
-            LOG.warn("Unable to echo data back",e);
+            LOG.warn("Unable to echo text message back",e);
         }
     }
 
@@ -52,7 +66,9 @@ public class OnEchoMessage implements WebSocket.OnTextMessage
     public void onOpen(Connection connection)
     {
         this.connection = connection;
-        LOG.info("Executing test case {}/{}",currentCaseId,totalCaseCount);
+        LOG.info("Executing test case {}",currentCaseId);
         LOG.debug("onOpen({})",connection);
+        connection.setMaxBinaryMessageSize(20 * MBYTE);
+        connection.setMaxTextMessageSize(20 * MBYTE);
     }
 }

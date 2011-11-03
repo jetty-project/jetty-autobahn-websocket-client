@@ -59,12 +59,48 @@ public class TestClient
         String hostname = args[0];
         int port = Integer.parseInt(args[1]);
 
+        int caseNumbers[] = null;
+
+        if (args.length > 2)
+        {
+            int offset = 2;
+            caseNumbers = new int[args.length - offset];
+            for (int i = offset; i < args.length; i++)
+            {
+                caseNumbers[i - offset] = Integer.parseInt(args[i]);
+            }
+        }
+
         TestClient client = null;
         try
         {
             String userAgent = "JettyWebsocketClient/" + getJettyVersion();
             client = new TestClient(hostname,port,userAgent);
-            client.startTestRun();
+
+            client.updateStatus("Running test suite...");
+            client.updateStatus("Using Fuzzing Server: %s:%d",hostname,port);
+            client.updateStatus("User Agent: %s",userAgent);
+
+            if (caseNumbers == null)
+            {
+                int caseCount = client.getCaseCount();
+                client.updateStatus("Will run all %d cases ...",caseCount);
+                for (int caseNum = 0; caseNum < caseCount; caseNum++)
+                {
+                    client.updateStatus("Running case %d (of %d) ...",caseNum,caseCount);
+                    client.runCaseByNumber(caseNum);
+                }
+            }
+            else
+            {
+                client.updateStatus("Will run %d cases ...",caseNumbers.length);
+                for (int caseNum : caseNumbers)
+                {
+                    client.runCaseByNumber(caseNum);
+                }
+            }
+            client.updateStatus("All test cases executed.");
+            client.updateReports();
         }
         catch (Throwable t)
         {
@@ -83,11 +119,11 @@ public class TestClient
     private Logger log;
     private URI baseWebsocketUri;
     private WebSocketClientFactory clientFactory;
+    @SuppressWarnings("unused")
     private String hostname;
+    @SuppressWarnings("unused")
     private int port;
     private String userAgent;
-    private int currentCaseId;
-    private int totalCaseCount;
 
     public TestClient(String hostname, int port, String userAgent) throws Exception
     {
@@ -100,7 +136,7 @@ public class TestClient
         this.clientFactory.start();
     }
 
-    private int getCaseCount() throws IOException, InterruptedException
+    public int getCaseCount() throws IOException, InterruptedException
     {
         URI wsUri = baseWebsocketUri.resolve("/getCaseCount");
         WebSocketClient wsc = clientFactory.newWebSocketClient();
@@ -115,12 +151,12 @@ public class TestClient
         throw new IllegalStateException("Unable to get Case Count");
     }
 
-    private void runNextCase() throws IOException, InterruptedException
+    public void runCaseByNumber(int caseNumber) throws IOException, InterruptedException
     {
-        URI wsUri = baseWebsocketUri.resolve("/runCase?case=" + currentCaseId + "&agent=" + UrlEncoded.encodeString(userAgent));
+        URI wsUri = baseWebsocketUri.resolve("/runCase?case=" + caseNumber + "&agent=" + UrlEncoded.encodeString(userAgent));
         log.debug("next uri - {}",wsUri);
         WebSocketClient wsc = clientFactory.newWebSocketClient();
-        OnEchoMessage onEchoMessage = new OnEchoMessage(currentCaseId,totalCaseCount);
+        OnEchoMessage onEchoMessage = new OnEchoMessage(caseNumber);
         Future<WebSocket.Connection> conn = wsc.open(wsUri,onEchoMessage);
 
         try
@@ -153,25 +189,7 @@ public class TestClient
         }
     }
 
-    private void startTestRun() throws IOException, InterruptedException
-    {
-        updateStatus("Running test suite...");
-        updateStatus("Using Fuzzing Server: %s:%d",hostname,port);
-        updateStatus("User Agent: %s",userAgent);
-        currentCaseId = 1;
-        totalCaseCount = getCaseCount();
-        updateStatus("Will run %d cases ...",totalCaseCount);
-
-        while (currentCaseId < totalCaseCount)
-        {
-            runNextCase();
-            currentCaseId++;
-        }
-        updateStatus("All test cases executed.");
-        updateReports();
-    }
-
-    private void updateReports() throws IOException, InterruptedException
+    public void updateReports() throws IOException, InterruptedException
     {
         URI wsUri = baseWebsocketUri.resolve("/updateReports?agent=" + UrlEncoded.encodeString(userAgent));
         WebSocketClient wsc = clientFactory.newWebSocketClient();
@@ -180,7 +198,7 @@ public class TestClient
         onUpdateReports.awaitClose();
     }
 
-    private void updateStatus(String format, Object... args)
+    public void updateStatus(String format, Object... args)
     {
         log.info(String.format(format,args));
     }
