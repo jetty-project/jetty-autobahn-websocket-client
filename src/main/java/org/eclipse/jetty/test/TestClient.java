@@ -26,8 +26,15 @@ public class TestClient
         URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
         if (url == null)
         {
+            if (WebSocketClient.class.getPackage() != null)
+            {
+                Package pkg = WebSocketClient.class.getPackage();
+                if (pkg.getImplementationVersion() != null)
+                {
+                    return pkg.getImplementationVersion();
+                }
+            }
             return "GitMaster";
-            // TODO: use git to get actual branch name?
         }
 
         InputStream in = null;
@@ -53,17 +60,19 @@ public class TestClient
             System.exit(-1);
         }
 
-        System.setProperty("org.eclipse.jetty.websocket.STRICT","true");
-        System.setProperty("org.eclipse.jetty.util.log.stderr.LONG","true");
+        // Configure Logging
+        System.setProperty("org.eclipse.jetty.LEVEL","DEBUG");
         System.setProperty("org.eclipse.jetty.io.nio.LEVEL","INFO");
         System.setProperty("org.eclipse.jetty.util.component.LEVEL","INFO");
-        System.setProperty("org.eclipse.jetty.LEVEL","DEBUG");
+        System.setProperty("org.eclipse.jetty.util.log.stderr.LONG","true");
 
         String hostname = args[0];
         int port = Integer.parseInt(args[1]);
 
         int caseNumbers[] = null;
 
+        // Optional case numbers
+        // NOTE: these are url query parameter case numbers (whole integers, eg "6"), not the case ids (eg "7.3.1")
         if (args.length > 2)
         {
             int offset = 2;
