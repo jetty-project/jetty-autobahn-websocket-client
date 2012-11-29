@@ -5,9 +5,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
-import org.eclipse.jetty.websocket.WebSocket;
+import org.eclipse.jetty.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.api.WebSocketConnection;
 
-public class OnUpdateReports implements WebSocket
+public class OnUpdateReports extends WebSocketAdapter
 {
     private static final Logger LOG = Log.getLogger(OnUpdateReports.class);
     private CountDownLatch latch = new CountDownLatch(1);
@@ -18,17 +19,18 @@ public class OnUpdateReports implements WebSocket
     }
 
     @Override
-    public void onClose(int closeCode, String message)
+    public void onWebSocketClose(int statusCode, String reason)
     {
-        LOG.debug("onClose({}, \"{}\")",closeCode,message);
+        LOG.debug("onClose({}, \"{}\")",statusCode,reason);
         LOG.info("Reports updated.");
         LOG.info("Test suite finished!");
         latch.countDown();
     }
 
     @Override
-    public void onOpen(Connection connection)
+    public void onWebSocketConnect(WebSocketConnection connection)
     {
+        super.onWebSocketConnect(connection);
         LOG.info("Updating reports ...");
     }
 }

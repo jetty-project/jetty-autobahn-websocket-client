@@ -11,12 +11,12 @@
   </description>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jetty-version>7.6.1.v20120215</jetty-version>
+    <jetty-version>9.0.0-SNAPSHOT</jetty-version>
   </properties>
   <dependencies>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-websocket</artifactId>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>websocket-client</artifactId>
       <version>${jetty-version}</version>
       <type>jar</type>
     </dependency>

@@ -5,9 +5,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
-import org.eclipse.jetty.websocket.WebSocket;
+import org.eclipse.jetty.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.api.WebSocketConnection;
 
-public class OnGetCaseCount implements WebSocket.OnTextMessage
+public class OnGetCaseCount extends WebSocketAdapter
 {
     private static final Logger LOG = Log.getLogger(OnGetCaseCount.class);
     private Integer casecount = null;
@@ -29,24 +30,24 @@ public class OnGetCaseCount implements WebSocket.OnTextMessage
     }
 
     @Override
-    public void onClose(int closeCode, String message)
+    public void onWebSocketClose(int statusCode, String reason)
     {
         // do nothing
-        LOG.debug("onClose({}, \"{}\")",closeCode,message);
+        LOG.debug("onWebSocketClose({}, \"{}\")",statusCode,reason);
     }
 
     @Override
-    public void onMessage(String data)
-    {
-        LOG.debug("onMessage(\"{}\")",data);
-        casecount = Integer.decode(data);
-        latch.countDown();
-    }
-
-    @Override
-    public void onOpen(Connection connection)
+    public void onWebSocketConnect(WebSocketConnection connection)
     {
         // do nothing
         LOG.debug("onOpen({})",connection);
+    }
+
+    @Override
+    public void onWebSocketText(String message)
+    {
+        LOG.debug("onWebSocketText(\"{}\")",message);
+        casecount = Integer.decode(message);
+        latch.countDown();
     }
 }
