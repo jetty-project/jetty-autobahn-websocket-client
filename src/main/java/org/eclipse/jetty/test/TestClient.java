@@ -14,9 +14,9 @@ import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
-import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.websocket.WebSocketClient;
-import org.eclipse.jetty.websocket.WebSocketClientFactory;
+import org.eclipse.jetty.websocket.client.ClientUpgradeResponse;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.eclipse.jetty.websocket.client.WebSocketClientFactory;
 
 public class TestClient
 {
@@ -148,18 +148,21 @@ public class TestClient
         this.clientFactory.start();
     }
 
-    public int getCaseCount() throws IOException, InterruptedException
+    public int getCaseCount() throws IOException, InterruptedException, ExecutionException, TimeoutException
     {
         URI wsUri = baseWebsocketUri.resolve("/getCaseCount");
-        WebSocketClient wsc = clientFactory.newWebSocketClient();
         OnGetCaseCount onCaseCount = new OnGetCaseCount();
-        wsc.open(wsUri,onCaseCount);
-        onCaseCount.awaitMessage();
-        if (onCaseCount.hasCaseCount())
-        {
-            return onCaseCount.getCaseCount();
-        }
+        WebSocketClient wsc = clientFactory.newWebSocketClient(onCaseCount);
+        Future<ClientUpgradeResponse> response = wsc.connect(wsUri);
 
+        if (waitForUpgrade(wsUri,response))
+        {
+            onCaseCount.awaitMessage();
+            if (onCaseCount.hasCaseCount())
+            {
+                return onCaseCount.getCaseCount();
+            }
+        }
         throw new IllegalStateException("Unable to get Case Count");
     }
 
@@ -167,26 +170,15 @@ public class TestClient
     {
         URI wsUri = baseWebsocketUri.resolve("/runCase?case=" + caseNumber + "&agent=" + UrlEncoded.encodeString(userAgent));
         log.debug("next uri - {}",wsUri);
-        WebSocketClient wsc = clientFactory.newWebSocketClient();
         OnEchoMessage onEchoMessage = new OnEchoMessage(caseNumber);
-        Future<WebSocket.Connection> conn = wsc.open(wsUri,onEchoMessage);
+        WebSocketClient wsc = clientFactory.newWebSocketClient(onEchoMessage);
 
-        try
-        {
-            conn.get(1,TimeUnit.SECONDS);
-        }
-        catch (ExecutionException e)
-        {
-            log.warn("Unable to connect to: " + wsUri,e);
-            return;
-        }
-        catch (TimeoutException e)
-        {
-            log.warn("Unable to connect to: " + wsUri,e);
-            return;
-        }
+        Future<ClientUpgradeResponse> response = wsc.connect(wsUri);
 
-        onEchoMessage.awaitClose();
+        if (waitForUpgrade(wsUri,response))
+        {
+            onEchoMessage.awaitClose();
+        }
     }
 
     public void shutdown()
@@ -201,17 +193,39 @@ public class TestClient
         }
     }
 
-    public void updateReports() throws IOException, InterruptedException
+    public void updateReports() throws IOException, InterruptedException, ExecutionException, TimeoutException
     {
         URI wsUri = baseWebsocketUri.resolve("/updateReports?agent=" + UrlEncoded.encodeString(userAgent));
-        WebSocketClient wsc = clientFactory.newWebSocketClient();
         OnUpdateReports onUpdateReports = new OnUpdateReports();
-        wsc.open(wsUri,onUpdateReports);
-        onUpdateReports.awaitClose();
+        WebSocketClient wsc = clientFactory.newWebSocketClient(onUpdateReports);
+        Future<ClientUpgradeResponse> response = wsc.connect(wsUri);
+        if (waitForUpgrade(wsUri,response))
+        {
+            onUpdateReports.awaitClose();
+        }
     }
 
     public void updateStatus(String format, Object... args)
     {
         log.info(String.format(format,args));
+    }
+
+    private boolean waitForUpgrade(URI wsUri, Future<ClientUpgradeResponse> response) throws InterruptedException
+    {
+        try
+        {
+            response.get(1,TimeUnit.SECONDS);
+            return true;
+        }
+        catch (ExecutionException e)
+        {
+            log.warn("Unable to connect to: " + wsUri,e);
+            return false;
+        }
+        catch (TimeoutException e)
+        {
+            log.warn("Unable to connect to: " + wsUri,e);
+            return false;
+        }
     }
 }
