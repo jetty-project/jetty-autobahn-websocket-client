@@ -1,6 +1,5 @@
 package org.eclipse.jetty.test;
 
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -31,15 +30,8 @@ public class OnEchoMessage extends WebSocketAdapter
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len)
     {
-        try
-        {
-            // Echo the data back.
-            connection.write(payload,offset,len);
-        }
-        catch (IOException e)
-        {
-            LOG.warn("Unable to echo binary message back",e);
-        }
+        // Echo the data back.
+        connection.write(payload,offset,len);
     }
 
     @Override
@@ -57,20 +49,11 @@ public class OnEchoMessage extends WebSocketAdapter
         this.connection = connection;
         LOG.info("Executing test case {}",currentCaseId);
         LOG.debug("onOpen({})",connection);
-//        connection.setMaxBinaryMessageSize(20 * MBYTE);
-//        connection.setMaxTextMessageSize(20 * MBYTE);
     }
 
     @Override
     public void onWebSocketText(String message) {
-        try
-        {
-            // Echo the data back.
-            connection.write(message);
-        }
-        catch (IOException e)
-        {
-            LOG.warn("Unable to echo text message back",e);
-        }
+        // Echo the data back.
+        connection.write(message);
     }
 }

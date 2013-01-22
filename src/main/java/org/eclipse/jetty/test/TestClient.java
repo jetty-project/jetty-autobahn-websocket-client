@@ -14,9 +14,8 @@ import org.eclipse.jetty.util.IO;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
-import org.eclipse.jetty.websocket.client.ClientUpgradeResponse;
+import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.eclipse.jetty.websocket.client.WebSocketClientFactory;
 
 public class TestClient
 {
@@ -130,7 +129,7 @@ public class TestClient
 
     private Logger log;
     private URI baseWebsocketUri;
-    private WebSocketClientFactory clientFactory;
+    private WebSocketClient client;
     @SuppressWarnings("unused")
     private String hostname;
     @SuppressWarnings("unused")
@@ -144,16 +143,15 @@ public class TestClient
         this.port = port;
         this.userAgent = userAgent;
         this.baseWebsocketUri = new URI("ws://" + hostname + ":" + port);
-        this.clientFactory = new WebSocketClientFactory();
-        this.clientFactory.start();
+        this.client = new WebSocketClient();
+        this.client.start();
     }
 
     public int getCaseCount() throws IOException, InterruptedException, ExecutionException, TimeoutException
     {
         URI wsUri = baseWebsocketUri.resolve("/getCaseCount");
         OnGetCaseCount onCaseCount = new OnGetCaseCount();
-        WebSocketClient wsc = clientFactory.newWebSocketClient(onCaseCount);
-        Future<ClientUpgradeResponse> response = wsc.connect(wsUri);
+        Future<Session> response = client.connect(onCaseCount,wsUri);
 
         if (waitForUpgrade(wsUri,response))
         {
@@ -171,9 +169,8 @@ public class TestClient
         URI wsUri = baseWebsocketUri.resolve("/runCase?case=" + caseNumber + "&agent=" + UrlEncoded.encodeString(userAgent));
         log.debug("next uri - {}",wsUri);
         OnEchoMessage onEchoMessage = new OnEchoMessage(caseNumber);
-        WebSocketClient wsc = clientFactory.newWebSocketClient(onEchoMessage);
 
-        Future<ClientUpgradeResponse> response = wsc.connect(wsUri);
+        Future<Session> response = client.connect(onEchoMessage,wsUri);
 
         if (waitForUpgrade(wsUri,response))
         {
@@ -185,11 +182,11 @@ public class TestClient
     {
         try
         {
-            this.clientFactory.stop();
+            this.client.stop();
         }
         catch (Exception e)
         {
-            log.warn("Unable to stop WebSocketClientFactory",e);
+            log.warn("Unable to stop WebSocketClient",e);
         }
     }
 
@@ -197,8 +194,7 @@ public class TestClient
     {
         URI wsUri = baseWebsocketUri.resolve("/updateReports?agent=" + UrlEncoded.encodeString(userAgent));
         OnUpdateReports onUpdateReports = new OnUpdateReports();
-        WebSocketClient wsc = clientFactory.newWebSocketClient(onUpdateReports);
-        Future<ClientUpgradeResponse> response = wsc.connect(wsUri);
+        Future<Session> response = client.connect(onUpdateReports,wsUri);
         response.get(5,TimeUnit.SECONDS);
         onUpdateReports.awaitClose();
     }
@@ -208,7 +204,7 @@ public class TestClient
         log.info(String.format(format,args));
     }
 
-    private boolean waitForUpgrade(URI wsUri, Future<ClientUpgradeResponse> response) throws InterruptedException
+    private boolean waitForUpgrade(URI wsUri, Future<Session> response) throws InterruptedException
     {
         try
         {
