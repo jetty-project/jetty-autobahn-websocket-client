@@ -5,8 +5,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
+import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.WebSocketConnection;
 
 public class OnUpdateReports extends WebSocketAdapter
 {
@@ -28,7 +28,7 @@ public class OnUpdateReports extends WebSocketAdapter
     }
 
     @Override
-    public void onWebSocketConnect(WebSocketConnection connection)
+    public void onWebSocketConnect(Session connection)
     {
         super.onWebSocketConnect(connection);
         LOG.info("Updating reports ...");

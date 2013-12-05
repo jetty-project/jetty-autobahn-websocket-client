@@ -1,20 +1,18 @@
 package org.eclipse.jetty.test;
 
+import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
+import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.WebSocketConnection;
 
 public class OnEchoMessage extends WebSocketAdapter
 {
     private static final Logger LOG = Log.getLogger(OnEchoMessage.class);
-    private static final int KBYTE = 1024;
-    private static final int MBYTE = KBYTE * KBYTE;
     private final int currentCaseId;
-    private WebSocketConnection connection;
     private CountDownLatch latch = new CountDownLatch(1);
 
     public OnEchoMessage(int currentCaseId)
@@ -31,7 +29,7 @@ public class OnEchoMessage extends WebSocketAdapter
     public void onWebSocketBinary(byte[] payload, int offset, int len)
     {
         // Echo the data back.
-        connection.write(payload,offset,len);
+        getRemote().sendBytesByFuture(ByteBuffer.wrap(payload,offset,len));
     }
 
     @Override
@@ -43,17 +41,16 @@ public class OnEchoMessage extends WebSocketAdapter
     }
 
     @Override
-    public void onWebSocketConnect(WebSocketConnection connection)
+    public void onWebSocketConnect(Session session)
     {
-        super.onWebSocketConnect(connection);
-        this.connection = connection;
+        super.onWebSocketConnect(session);
         LOG.info("Executing test case {}",currentCaseId);
-        LOG.debug("onOpen({})",connection);
+        LOG.debug("onOpen({})",session);
     }
 
     @Override
     public void onWebSocketText(String message) {
         // Echo the data back.
-        connection.write(message);
+        getRemote().sendStringByFuture(message);
     }
 }

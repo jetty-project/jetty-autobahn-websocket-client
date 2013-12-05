@@ -29,3 +29,8 @@ target/
 *.ipr
 *.iws
 .idea/
+
+# Autobahn TestSuite files
+reports/
+fuzzingserver.json
+

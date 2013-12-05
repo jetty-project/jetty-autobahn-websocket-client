@@ -5,8 +5,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
+import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.WebSocketConnection;
 
 public class OnGetCaseCount extends WebSocketAdapter
 {
@@ -32,15 +32,15 @@ public class OnGetCaseCount extends WebSocketAdapter
     @Override
     public void onWebSocketClose(int statusCode, String reason)
     {
-        // do nothing
+        super.onWebSocketClose(statusCode,reason);
         LOG.debug("onWebSocketClose({}, \"{}\")",statusCode,reason);
     }
 
     @Override
-    public void onWebSocketConnect(WebSocketConnection connection)
+    public void onWebSocketConnect(Session session)
     {
-        // do nothing
-        LOG.debug("onOpen({})",connection);
+        super.onWebSocketConnect(session);
+        LOG.debug("onOpen({})",session);
     }
 
     @Override

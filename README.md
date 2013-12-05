@@ -1,37 +1,26 @@
 Running the Autobahn Client tests
 =================================
 
-Grab yourself a copy of autobahn
---------------------------------
+Install the Autobahn wstest command line tool
+---------------------------------------------
 
-    $ git clone https://github.com/oberstet/Autobahn
-
-
-Install the python dependencies
--------------------------------
+The full installation instructions can be found at [http://autobahn.ws/testsuite/installation]
 
     $ sudo apt-get install python python-dev python-twisted
     $ sudo apt-get install python-setuptools
-
-
-Install Autobahn itself
------------------------
-
-    $ cd Autobahn
-    $ git checkout v0.4.2
-    $ cd lib/python
-    $ sudo python setup.py install
-
+    $ sudo easy_install autobahntestsuite
 
 Run the Autobahn Fuzzing Server
 -------------------------------
 
-    $ cd Autobahn/testsuite/websockets
-    $ python fuxxing_server.py
+    $ wstest --mode=fuzzingserver
 
+Let this run in a terminal window of its own.
 
 Run the jetty-websocket client tests against Autobahn
 -----------------------------------------------------
+
+Switch to another terminal window and run.
 
     $ cd jetty-autobahn-websocket-client
     $ mvn clean install

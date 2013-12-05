@@ -19,6 +19,8 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 public class TestClient
 {
+    private static final int MBYTE = 1024 * 1024;
+
     private static String getJettyVersion() throws IOException
     {
         String resource = "META-INF/maven/org.eclipse.jetty/jetty-websocket/pom.properties";
@@ -58,12 +60,6 @@ public class TestClient
             System.err.printf("USAGE: java -cp jetty-autobahn-websocket-client.jar %s [hostname] [port]%n",TestClient.class.getName());
             System.exit(-1);
         }
-
-        // Configure Logging
-        System.setProperty("org.eclipse.jetty.LEVEL","DEBUG");
-        System.setProperty("org.eclipse.jetty.io.nio.LEVEL","INFO");
-        System.setProperty("org.eclipse.jetty.util.component.LEVEL","INFO");
-        System.setProperty("org.eclipse.jetty.util.log.stderr.LONG","true");
 
         String hostname = args[0];
         int port = Integer.parseInt(args[1]);
@@ -144,6 +140,8 @@ public class TestClient
         this.userAgent = userAgent;
         this.baseWebsocketUri = new URI("ws://" + hostname + ":" + port);
         this.client = new WebSocketClient();
+        this.client.getPolicy().setMaxBinaryMessageSize(20 * MBYTE);
+        this.client.getPolicy().setMaxTextMessageSize(20 * MBYTE);
         this.client.start();
     }
 
