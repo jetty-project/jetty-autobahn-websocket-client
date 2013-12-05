@@ -1,6 +1,8 @@
 Running the Autobahn Client tests
 =================================
 
+Jetty Native WebSocket Client tests for [Autobahn TestSuite](http://autobahn.ws/testsuite/)
+
 Install the Autobahn wstest command line tool
 ---------------------------------------------
 
