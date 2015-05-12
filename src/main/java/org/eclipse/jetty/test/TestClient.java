@@ -16,6 +16,7 @@ import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.util.log.Logger;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.eclipse.jetty.websocket.common.extensions.compress.PerMessageDeflateExtension;
 
 public class TestClient
 {
@@ -92,7 +93,7 @@ public class TestClient
             {
                 int caseCount = client.getCaseCount();
                 client.updateStatus("Will run all %d cases ...",caseCount);
-                for (int caseNum = 0; caseNum < caseCount; caseNum++)
+                for (int caseNum = 1; caseNum <= caseCount; caseNum++)
                 {
                     client.updateStatus("Running case %d (of %d) ...",caseNum,caseCount);
                     client.runCaseByNumber(caseNum);
@@ -142,6 +143,7 @@ public class TestClient
         this.client = new WebSocketClient();
         this.client.getPolicy().setMaxBinaryMessageSize(20 * MBYTE);
         this.client.getPolicy().setMaxTextMessageSize(20 * MBYTE);
+        this.client.getExtensionFactory().register("permessage-deflate",PerMessageDeflateExtension.class);
         this.client.start();
     }
 
