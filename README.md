@@ -1,3 +1,5 @@
+This contents of this repository have been superceded by replacement code in mainline Jetty at https://github.com/eclipse/jetty.project
+
 Running the Autobahn Client tests
 =================================
 
